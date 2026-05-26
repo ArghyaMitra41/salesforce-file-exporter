@@ -1,11 +1,11 @@
 /**
- * File naming logic for ZIP exports.
+ * File naming logic for exports.
  * Handles naming strategies and duplicate deduplication.
  */
 
 import type { FileRecord, FileNamingStrategy } from '../../types/export';
 
-/** Sanitize a filename — remove characters invalid in ZIP paths */
+/** Sanitize a filename — remove characters invalid in file paths */
 function sanitize(name: string): string {
   return name
     .replace(/[/\\:*?"<>|]/g, '_')
@@ -15,7 +15,21 @@ function sanitize(name: string): string {
 }
 
 /**
- * Resolve the ZIP path for a file record based on naming strategy.
+ * In Salesforce, ContentVersion.Title often already includes the extension
+ * (e.g. "invoice.pdf") even though FileExtension is also stored separately.
+ * Strip any trailing extension from the title so we don't get "invoice.pdf.pdf".
+ */
+function stripTrailingExtension(title: string, ext: string): string {
+  if (!ext) return title;
+  const suffix = `.${ext.toLowerCase()}`;
+  if (title.toLowerCase().endsWith(suffix)) {
+    return title.slice(0, -suffix.length);
+  }
+  return title;
+}
+
+/**
+ * Resolve the file path for a record based on naming strategy.
  * Uses a seen-names set to deduplicate.
  */
 export function resolveZipPath(
@@ -24,7 +38,9 @@ export function resolveZipPath(
   seen: Set<string>
 ): string {
   const ext = file.extension ? `.${file.extension}` : '';
-  const base = sanitize(file.title) + ext;
+  // Strip extension from title before re-appending it — prevents "name.pdf.pdf"
+  const cleanTitle = sanitize(stripTrailingExtension(file.title, file.extension));
+  const base = cleanTitle + ext;
   const parentId = file.parentId || 'unknown';
 
   let path: string;

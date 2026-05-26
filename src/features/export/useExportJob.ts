@@ -1,6 +1,6 @@
 /**
  * Core export orchestration hook.
- * Manages the full pipeline: resolve IDs → collect file metadata → download + zip.
+ * Manages the full pipeline: resolve IDs → collect file metadata → download files.
  */
 
 import { useCallback } from 'react';
@@ -13,6 +13,7 @@ import { resolveAttachments } from '../../lib/salesforce/attachments';
 import { resolveDocuments } from '../../lib/salesforce/documents';
 import { getListViewRecordIds } from '../../lib/salesforce/listViews';
 import { buildAndDownloadZip } from '../../lib/zip/zipBuilder';
+import { downloadFilesIndividually } from '../../lib/zip/fileDownloader';
 import { getApiLimits } from '../../lib/salesforce/objects';
 import { formatLogEntry } from '../../lib/utils/logger';
 
@@ -20,7 +21,10 @@ export function useExportJob() {
   const navigate = useNavigate();
   const store = useExportStore();
 
-  const runExport = useCallback(async (config: ExportConfig) => {
+  const runExport = useCallback(async (
+    config: ExportConfig,
+    dirHandle?: FileSystemDirectoryHandle | null
+  ) => {
     const job = store.startJob(config);
     const signal = job.abortController.signal;
     const log = (msg: string, level: 'info' | 'warn' | 'error' | 'success' = 'info') =>
@@ -160,17 +164,32 @@ export function useExportJob() {
       store.setFiles(allFiles);
       log(`Total: ${allFiles.length} files to download`, 'success');
 
-      // ── Phase 4: Download + ZIP ──────────────────────────────────────────
+      // ── Phase 4: Download files ──────────────────────────────────────────
       store.updateProgress({ phase: 'downloading' });
-      log('Starting downloads…');
 
-      await buildAndDownloadZip(allFiles, {
-        naming: config.naming,
-        signal,
-        onProgress: (update) => store.updateProgress(update),
-        onFileStatus: (fileId, status, errorMsg) =>
+      const progressCallbacks = {
+        onProgress: (update: Partial<import('../../types/export').ExportProgress>) =>
+          store.updateProgress(update),
+        onFileStatus: (fileId: string, status: 'downloading' | 'done' | 'error', errorMsg?: string) =>
           store.updateFileStatus(fileId, status, errorMsg),
-      });
+      };
+
+      if (config.downloadMethod === 'individual') {
+        log(dirHandle ? `Saving files to chosen folder…` : 'Saving files individually…');
+        await downloadFilesIndividually(allFiles, {
+          naming: config.naming,
+          signal,
+          dirHandle,
+          ...progressCallbacks,
+        });
+      } else {
+        log('Building ZIP…');
+        await buildAndDownloadZip(allFiles, {
+          naming: config.naming,
+          signal,
+          ...progressCallbacks,
+        });
+      }
 
       if (signal.aborted) {
         store.updateProgress({ phase: 'cancelled' });
@@ -178,7 +197,12 @@ export function useExportJob() {
       }
 
       store.updateProgress({ phase: 'done' });
-      log('Export complete! ZIP downloaded.', 'success');
+      log(
+        config.downloadMethod === 'individual'
+          ? 'All files saved!'
+          : 'Export complete! ZIP downloaded.',
+        'success'
+      );
     } catch (err) {
       if (signal.aborted || (err instanceof DOMException && err.name === 'AbortError')) {
         store.updateProgress({ phase: 'cancelled' });

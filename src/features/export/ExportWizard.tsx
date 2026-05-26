@@ -6,14 +6,17 @@ import {
   FunnelIcon,
   ArrowRightIcon,
   ArrowLeftIcon,
+  FolderOpenIcon,
+  ArchiveBoxIcon,
 } from '@heroicons/react/24/outline';
-import type { ExportConfig, ExportMode, FileSourceType, FileNamingStrategy, ObjectFieldFilter } from '../../types/export';
+import type { ExportConfig, ExportMode, FileSourceType, FileNamingStrategy, ObjectFieldFilter, DownloadMethod } from '../../types/export';
 import CsvExport from './modes/CsvExport';
 import SoqlExport from './modes/SoqlExport';
 import ListViewExport from './modes/ListViewExport';
 import ObjectExport from './modes/ObjectExport';
 import FileNamingOptions from './FileNamingOptions';
 import { useExportJob } from './useExportJob';
+import { supportsDirectoryPicker, pickSaveDirectory } from '../../lib/zip/fileDownloader';
 
 const MODES: { value: ExportMode; label: string; description: string; icon: React.ReactNode }[] = [
   {
@@ -48,7 +51,7 @@ const FILE_TYPES: { value: FileSourceType; label: string; description: string }[
   { value: 'document', label: 'Documents', description: 'Legacy Document object' },
 ];
 
-const STEPS = ['Mode', 'Configure', 'Files & Filters', 'Naming', 'Review'];
+const STEPS = ['Mode', 'Configure', 'Files & Filters', 'Naming', 'Download', 'Review'];
 
 export default function ExportWizard() {
   const { runExport } = useExportJob();
@@ -66,6 +69,7 @@ export default function ExportWizard() {
   const [dateEnd, setDateEnd] = useState('');
   const [extensions, setExtensions] = useState('');
   const [naming, setNaming] = useState<FileNamingStrategy>('original');
+  const [downloadMethod, setDownloadMethod] = useState<DownloadMethod>('individual');
 
   const toggleFileType = (ft: FileSourceType) => {
     setFileTypes((prev) =>
@@ -85,7 +89,7 @@ export default function ExportWizard() {
     return true;
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     const extArr = extensions
       .split(/[,\s]+/)
       .map((e) => e.trim().replace(/^\./, '').toLowerCase())
@@ -99,6 +103,7 @@ export default function ExportWizard() {
         fileExtensions: extArr.length > 0 ? extArr : undefined,
       },
       naming,
+      downloadMethod,
       csvRecordIds: mode === 'csv' ? csvIds : undefined,
       soqlQuery: mode === 'soql' ? soqlQuery : undefined,
       objectName: ['listview', 'object'].includes(mode) ? objectName : undefined,
@@ -106,7 +111,15 @@ export default function ExportWizard() {
       objectFilters: mode === 'object' ? objectFilters : undefined,
     };
 
-    runExport(config);
+    // For individual downloads on supported browsers, prompt for a save folder
+    // (must be called synchronously from this click handler — user gesture requirement)
+    let dirHandle: FileSystemDirectoryHandle | null = null;
+    if (downloadMethod === 'individual' && supportsDirectoryPicker()) {
+      dirHandle = await pickSaveDirectory();
+      // null means user cancelled the picker — fall back to sequential <a> downloads
+    }
+
+    runExport(config, dirHandle);
   };
 
   return (
@@ -241,13 +254,74 @@ export default function ExportWizard() {
         {/* Step 3: File naming */}
         {step === 3 && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">File naming in ZIP</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">File naming</h2>
             <FileNamingOptions value={naming} onChange={setNaming} />
           </div>
         )}
 
-        {/* Step 4: Review */}
+        {/* Step 4: Download method */}
         {step === 4 && (
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">How should files be delivered?</h2>
+            <p className="text-sm text-gray-500 mb-4">Choose how exported files are saved to your device.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setDownloadMethod('individual')}
+                className={`text-left p-4 rounded-lg border transition-colors ${
+                  downloadMethod === 'individual'
+                    ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-400'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className={`mb-2 ${downloadMethod === 'individual' ? 'text-blue-600' : 'text-gray-500'}`}>
+                  <FolderOpenIcon className="h-6 w-6" />
+                </div>
+                <p className="font-medium text-sm text-gray-800">Save files individually</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {supportsDirectoryPicker()
+                    ? 'Pick a folder once — files stream directly to disk with no memory build-up.'
+                    : 'Files download one at a time to your Downloads folder (all browsers).'}
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDownloadMethod('zip')}
+                className={`text-left p-4 rounded-lg border transition-colors ${
+                  downloadMethod === 'zip'
+                    ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-400'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className={`mb-2 ${downloadMethod === 'zip' ? 'text-blue-600' : 'text-gray-500'}`}>
+                  <ArchiveBoxIcon className="h-6 w-6" />
+                </div>
+                <p className="font-medium text-sm text-gray-800">Bundle as ZIP</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  All files packed into a single ZIP download. Best for small to medium exports.
+                </p>
+              </button>
+            </div>
+
+            {downloadMethod === 'individual' && supportsDirectoryPicker() && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-lg text-xs text-green-700">
+                📂 You'll be prompted to choose a save folder when the export starts.
+                Files will be written directly to disk — no memory limits.
+              </div>
+            )}
+            {downloadMethod === 'individual' && !supportsDirectoryPicker() && (
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg text-xs text-amber-700">
+                ⚠️ Your browser doesn't support the folder picker API.
+                Files will download sequentially to your Downloads folder.
+                Chrome or Edge is recommended for large exports.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 5: Review */}
+        {step === 5 && (
           <div>
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Review & Start Export</h2>
             <dl className="space-y-3 text-sm">
@@ -260,11 +334,23 @@ export default function ExportWizard() {
               <ReviewRow label="Date range" value={dateStart || dateEnd ? `${dateStart || '—'} → ${dateEnd || '—'}` : 'All time'} />
               <ReviewRow label="Extensions" value={extensions || 'All'} />
               <ReviewRow label="File naming" value={naming} />
+              <ReviewRow
+                label="Delivery"
+                value={
+                  downloadMethod === 'individual'
+                    ? supportsDirectoryPicker() ? 'Save individually (folder picker)' : 'Save individually (sequential)'
+                    : 'ZIP download'
+                }
+              />
             </dl>
 
             <div className="mt-5 p-3 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700">
-              Files will be downloaded directly from Salesforce to your browser and bundled into a ZIP.
-              Large exports (hundreds of files) may take several minutes.
+              {downloadMethod === 'individual'
+                ? supportsDirectoryPicker()
+                  ? "You'll pick a save folder and files will stream directly to disk. No ZIP needed."
+                  : 'Files will download one at a time to your Downloads folder.'
+                : 'All files will be packed into a single ZIP and downloaded when complete.'}
+              {' '}Large exports (hundreds of files) may take several minutes.
             </div>
           </div>
         )}
@@ -294,7 +380,7 @@ export default function ExportWizard() {
         ) : (
           <button
             type="button"
-            onClick={handleStart}
+            onClick={() => void handleStart()}
             className="btn-primary"
             disabled={fileTypes.length === 0}
           >

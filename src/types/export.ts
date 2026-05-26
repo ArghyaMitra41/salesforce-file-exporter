@@ -17,6 +17,9 @@ export type FileStatus = 'pending' | 'downloading' | 'done' | 'error' | 'skipped
 
 export type FileNamingStrategy = 'original' | 'id-prefix' | 'id-only' | 'folder-per-record';
 
+/** How files are delivered to the user */
+export type DownloadMethod = 'individual' | 'zip';
+
 export interface DateRangeFilter {
   start?: string; // ISO date string
   end?: string;
@@ -32,6 +35,7 @@ export interface ExportConfig {
   mode: ExportMode;
   filter: ExportFilter;
   naming: FileNamingStrategy;
+  downloadMethod: DownloadMethod;
   includeSubfolders?: boolean;
   // mode-specific config
   csvRecordIds?: string[];
