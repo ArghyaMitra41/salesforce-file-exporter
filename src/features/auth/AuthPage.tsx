@@ -49,7 +49,7 @@ export default function AuthPage() {
         <div className="flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-6">
             <DocumentArrowDownIcon className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">SFDC File Exporter</span>
+            <span className="text-2xl font-bold text-gray-900">Salesforce File Exporter</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-3 leading-tight">
             Export Salesforce Files<br />directly to your computer

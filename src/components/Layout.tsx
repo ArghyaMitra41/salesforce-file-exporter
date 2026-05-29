@@ -48,7 +48,7 @@ export default function Layout({ children }: Props) {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link to={isAuthenticated ? '/export' : '/auth'} className="flex items-center gap-2">
             <DocumentArrowDownIcon className="h-6 w-6 text-blue-600" />
-            <span className="font-bold text-gray-900 text-sm">SFDC File Exporter</span>
+            <span className="font-bold text-gray-900 text-sm">Salesforce File Exporter</span>
           </Link>
 
           <nav className="flex items-center gap-3">

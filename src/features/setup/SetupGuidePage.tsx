@@ -94,12 +94,12 @@ export default function SetupGuidePage() {
               <p>In Salesforce Setup, search for <strong>App Manager</strong> and click <strong>New Connected App</strong>.</p>
             </Step>
             <Step num={2} title="Fill in Basic Info">
-              <p>Set a name (e.g. <em>SFDC File Exporter</em>) and your email. The API name fills automatically.</p>
+              <p>Set a name (e.g. <em>Salesforce File Exporter</em>) and your email. The API name fills automatically.</p>
             </Step>
             <Step num={3} title="Enable OAuth Settings">
               <p>Check <strong>Enable OAuth Settings</strong>.</p>
               <p>Add these <strong>Callback URLs</strong> (one per line):</p>
-              <CodeBlock code={`${APP_URL}/auth/callback\nhttp://localhost:5173/auth/callback`} />
+              <CodeBlock code={`${APP_URL}/auth/callback`} />
             </Step>
             <Step num={4} title="Select OAuth Scopes">
               <p>Add these scopes:</p>
@@ -114,7 +114,11 @@ export default function SetupGuidePage() {
                 <li>✅ <strong>Enable Proof Key for Code Exchange (PKCE) Extension</strong></li>
                 <li>✅ <strong>Enable CORS for OAuth Endpoints</strong></li>
               </ul>
-              <p>Also uncheck: <strong>Require Secret for Web Server Flow</strong></p>
+              <p>Also uncheck:</p>
+              <ul className="list-disc list-inside space-y-1 ml-1">
+                <li>❌ <strong>Require Secret for Web Server Flow</strong></li>
+                <li>❌ <strong>Require Secret for Refresh Token Flow</strong></li>
+              </ul>
             </Step>
             <Step num={6} title="Save and Copy the Consumer Key">
               <p>Save the Connected App. After 2–10 minutes, open the app details and copy the <strong>Consumer Key</strong> (Client ID).</p>

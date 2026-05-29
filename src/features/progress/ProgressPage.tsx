@@ -117,7 +117,7 @@ export default function ProgressPage() {
         {isDone && (
           <div className="mt-3 rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-700 flex items-center gap-2">
             <DocumentArrowDownIcon className="h-4 w-4 flex-shrink-0" />
-            ZIP file has been downloaded to your browser's default download folder.
+            File has been downloaded to your browser's default download folder.
           </div>
         )}
       </div>

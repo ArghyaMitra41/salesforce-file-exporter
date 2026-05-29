@@ -1,5 +1,5 @@
 {
-  "name": "sfdc-file-exporter",
+  "name": "salesforce-file-exporter",
   "private": true,
   "version": "0.1.0",
   "type": "module",

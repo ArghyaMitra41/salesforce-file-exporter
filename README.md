@@ -1,4 +1,4 @@
-# SFDC File Exporter
+# Salesforce File Exporter
 
 A zero-cost, browser-based tool to bulk-export Files, Attachments, and Documents from Salesforce — directly from your browser to your computer.
 
@@ -28,6 +28,7 @@ A Salesforce admin needs to:
    - ✅ Enable PKCE Extension
    - ✅ Enable CORS for OAuth Endpoints
    - ❌ Uncheck "Require Secret for Web Server Flow"
+   - ❌ Uncheck "Require Secret for Refresh Token Flow"
 
 2. **Add to CORS Allowlist** (Setup → Security → CORS)
    - Add: `https://your-app.vercel.app`
