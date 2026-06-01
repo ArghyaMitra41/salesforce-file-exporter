@@ -91,14 +91,14 @@ export default function SetupGuidePage() {
           </div>
           <div className="pt-6 space-y-0">
             <Step num={1} title="Go to App Manager">
-              <p>In Salesforce Setup, search for <strong>App Manager</strong> and click <strong>New Connected App</strong>.</p>
+              <p>In Salesforce Setup, search for <strong>External Client App Manager</strong> and click <strong>New External Client App</strong>.</p>
             </Step>
             <Step num={2} title="Fill in Basic Info">
               <p>Set a name (e.g. <em>Salesforce File Exporter</em>) and your email. The API name fills automatically.</p>
             </Step>
             <Step num={3} title="Enable OAuth Settings">
               <p>Check <strong>Enable OAuth Settings</strong>.</p>
-              <p>Add these <strong>Callback URLs</strong> (one per line):</p>
+              <p>Add the <strong>Callback URL</strong>:</p>
               <CodeBlock code={`${APP_URL}/auth/callback`} />
             </Step>
             <Step num={4} title="Select OAuth Scopes">
@@ -109,10 +109,9 @@ export default function SetupGuidePage() {
               </ul>
             </Step>
             <Step num={5} title="Enable PKCE and CORS for OAuth">
-              <p>Check both of these boxes:</p>
+              <p>Check this box:</p>
               <ul className="list-disc list-inside space-y-1 ml-1">
                 <li>✅ <strong>Enable Proof Key for Code Exchange (PKCE) Extension</strong></li>
-                <li>✅ <strong>Enable CORS for OAuth Endpoints</strong></li>
               </ul>
               <p>Also uncheck:</p>
               <ul className="list-disc list-inside space-y-1 ml-1">
@@ -142,9 +141,11 @@ export default function SetupGuidePage() {
             <Step num={2} title="Add this app's URL">
               <p>Click <strong>New</strong> and add:</p>
               <CodeBlock code={APP_URL} />
-              <p className="text-xs text-gray-400">Add <code>http://localhost:5173</code> as well for local development.</p>
             </Step>
-            <Step num={3} title="Save">
+            <Step num={3} title="CORS Policy Settings">
+              <p>Enable CORS for OAuth endpoints (if not already).</p>
+            </Step>
+            <Step num={4} title="Save">
               <p>Click Save. CORS changes take effect immediately.</p>
             </Step>
           </div>
