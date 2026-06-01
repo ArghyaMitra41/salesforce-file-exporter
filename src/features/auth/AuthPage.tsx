@@ -77,6 +77,17 @@ export default function AuthPage() {
               View Connected App setup guide →
             </Link>
           </p>
+
+          <p className="mt-4 text-xs text-gray-400">
+            Built by{' '}
+            <a href="https://arghyamitra.netlify.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+              Arghya Mitra
+            </a>
+            {' '}·{' '}
+            <a href="https://github.com/ArghyaMitra41/salesforce-file-exporter" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+              GitHub
+            </a>
+          </p>
         </div>
 
         {/* Right: Login Form */}

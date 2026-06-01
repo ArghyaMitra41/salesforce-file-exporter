@@ -83,8 +83,18 @@ export default function Layout({ children }: Props) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-3 px-4 text-center text-xs text-gray-400">
-        All data flows directly between your browser and Salesforce. Nothing is stored on external servers.
+      <footer className="border-t border-gray-200 py-3 px-4 text-center text-xs text-gray-400 space-y-1">
+        <p>All data flows directly between your browser and Salesforce. Nothing is stored on external servers.</p>
+        <p>
+          Built by{' '}
+          <a href="https://arghyamitra.netlify.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+            Arghya Mitra
+          </a>
+          {' '}·{' '}
+          <a href="https://github.com/ArghyaMitra41/salesforce-file-exporter" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+            GitHub
+          </a>
+        </p>
       </footer>
     </div>
   );
